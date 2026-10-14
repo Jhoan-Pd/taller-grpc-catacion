@@ -1,0 +1,10 @@
+# Blueprint de Render: un solo servicio gratuito con el servidor gRPC y la web.
+services:
+  - type: web
+    name: catacion-grpc
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/salud
+    autoDeploy: true

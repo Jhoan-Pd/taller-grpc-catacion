@@ -1,0 +1,138 @@
+// Catación de café a ciegas con calibración en vivo del panel de jueces.
+// Usa los cuatro tipos de RPC de gRPC:
+//   - Unary ............... CrearSesion, ObtenerSesion, RevelarResultados
+//   - Client streaming .... CargarMuestras
+//   - Server streaming .... SeguirSesion
+//   - Bidirectional ....... Catar
+syntax = "proto3";
+
+package catacion;
+
+service Catacion {
+  // Unary: el organizador abre una sesión de catación.
+  rpc CrearSesion (CrearSesionRequest) returns (Sesion);
+
+  // Unary: consultar una sesión (códigos ciegos de las muestras, estado).
+  rpc ObtenerSesion (SesionId) returns (Sesion);
+
+  // Client streaming: el organizador envía las muestras una por una;
+  // el servidor responde al final con el código ciego asignado a cada finca.
+  rpc CargarMuestras (stream Muestra) returns (ResumenCarga);
+
+  // Server streaming: panel en vivo. El servidor empuja eventos y el
+  // ranking actualizado cada vez que algo cambia en la sesión.
+  rpc SeguirSesion (SesionId) returns (stream Evento);
+
+  // Bidirectional streaming: el juez envía calificaciones y por cada una
+  // recibe de inmediato su puntaje total y si está calibrado con el panel.
+  rpc Catar (stream Calificacion) returns (stream Retroalimentacion);
+
+  // Unary: se rompe el anonimato y se publican los resultados finales.
+  rpc RevelarResultados (SesionId) returns (Resultados);
+}
+
+message CrearSesionRequest {
+  string nombre = 1;
+}
+
+message SesionId {
+  string sesion_id = 1;
+}
+
+message Sesion {
+  string id = 1;
+  string nombre = 2;
+  bool revelada = 3;
+  repeated string codigos_muestras = 4;  // solo códigos ciegos, nunca fincas
+}
+
+message Muestra {
+  string sesion_id = 1;
+  string finca = 2;
+  string productor = 3;
+  string region = 4;
+  string variedad = 5;   // Castillo, Caturra, Geisha, Bourbon rosado...
+  string proceso = 6;    // Lavado, Honey, Natural...
+}
+
+message CodigoAsignado {
+  string codigo = 1;
+  string finca = 2;
+}
+
+message ResumenCarga {
+  string sesion_id = 1;
+  int32 recibidas = 2;
+  repeated CodigoAsignado asignaciones = 3;
+}
+
+// Formulario de catación SCA (clásico, 100 puntos).
+message Atributos {
+  // Escala de 6.00 a 10.00 en pasos de 0.25
+  double fragancia = 1;        // fragancia / aroma
+  double sabor = 2;
+  double residual = 3;         // sabor residual
+  double acidez = 4;
+  double cuerpo = 5;
+  double balance = 6;
+  double puntaje_catador = 7;  // impresión global
+  // Número de tazas (de 5) sin problema; cada una vale 2 puntos
+  int32 uniformidad = 8;
+  int32 taza_limpia = 9;
+  int32 dulzor = 10;
+}
+
+message Calificacion {
+  string sesion_id = 1;
+  string juez = 2;
+  string codigo_muestra = 3;
+  Atributos atributos = 4;
+  int32 tazas_defectuosas = 5;   // 0 a 5
+  int32 intensidad_defecto = 6;  // 2 = leve, 4 = falla grave
+  string notas = 7;              // "panela, mandarina, cacao..."
+}
+
+message Retroalimentacion {
+  string codigo_muestra = 1;
+  string juez = 2;
+  bool aceptada = 3;
+  repeated string errores = 4;
+  double puntaje_total = 5;
+  double promedio_panel = 6;     // mediana de los OTROS jueces
+  int32 otros_jueces = 7;
+  bool calibrado = 8;
+  repeated string observaciones = 9;
+}
+
+message Posicion {
+  int32 puesto = 1;
+  string codigo = 2;
+  double promedio = 3;
+  double desviacion = 4;         // qué tan de acuerdo está el panel
+  int32 calificaciones = 5;
+  string clasificacion = 6;
+  // Solo se llenan cuando la sesión se revela
+  string finca = 7;
+  string productor = 8;
+  string region = 9;
+  string variedad = 10;
+  string proceso = 11;
+}
+
+message Evento {
+  enum Tipo {
+    CONEXION = 0;
+    MUESTRA_AGREGADA = 1;
+    CALIFICACION_RECIBIDA = 2;
+    RESULTADOS_REVELADOS = 3;
+  }
+  Tipo tipo = 1;
+  string mensaje = 2;
+  repeated Posicion ranking = 3;
+}
+
+message Resultados {
+  string sesion_id = 1;
+  string nombre = 2;
+  repeated Posicion ranking = 3;
+}

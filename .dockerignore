@@ -1,0 +1,6 @@
+cliente/
+web/node_modules/
+web/.next/
+**/__pycache__
+**/*_pb2*.py
+*.zip
