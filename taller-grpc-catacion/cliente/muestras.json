@@ -1,0 +1,8 @@
+[
+  {"finca": "Finca El Mirador", "productor": "Rosa Delia Erazo", "region": "Nariño", "variedad": "Caturra", "proceso": "Lavado"},
+  {"finca": "Finca La Cumbre", "productor": "Hernán Quintero", "region": "Huila", "variedad": "Geisha", "proceso": "Natural"},
+  {"finca": "Finca Los Guaduales", "productor": "Familia Ospina", "region": "Quindío", "variedad": "Castillo", "proceso": "Lavado"},
+  {"finca": "Finca Monte Alto", "productor": "Asociación Serranía", "region": "Sierra Nevada", "variedad": "Típica", "proceso": "Lavado"},
+  {"finca": "Finca El Recreo", "productor": "Ernesto Perdomo", "region": "Huila", "variedad": "Bourbon rosado", "proceso": "Honey"},
+  {"finca": "Finca La Palma", "productor": "Luz Mery Chantre", "region": "Cauca", "variedad": "Colombia", "proceso": "Natural"}
+]
